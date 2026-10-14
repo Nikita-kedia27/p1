@@ -1,0 +1,8 @@
+{
+  "name": "InterviewForge",
+  "description": "AI Technical Interview & Hiring Manager Simulator for software engineers and data professionals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

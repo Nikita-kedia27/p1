@@ -54,6 +54,51 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Audio transcription endpoint for microphone recordings
+app.post('/api/transcribe', async (req, res) => {
+  const { audioData, mimeType } = req.body as { audioData: string; mimeType?: string };
+
+  if (!audioData) {
+    return res.status(400).json({ error: 'Audio data is required.' });
+  }
+
+  let ai: GoogleGenAI;
+  try {
+    ai = getAIClient();
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'API key error' });
+  }
+
+  try {
+    const cleanBase64 = audioData.replace(/^data:[^;]+;base64,/, '');
+
+    const audioPart = {
+      inlineData: {
+        mimeType: mimeType || 'audio/webm',
+        data: cleanBase64,
+      },
+    };
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-transcribe',
+      contents: {
+        parts: [
+          audioPart,
+          {
+            text: 'Transcribe this spoken technical interview answer verbatim. Accurately capture technical terms, programming languages, algorithms, SQL syntax, and architectural concepts. Return only the transcribed text without quotes, markdown wrappers, or intro/outro remarks.',
+          },
+        ],
+      },
+    });
+
+    const transcription = response.text?.trim() || '';
+    res.json({ transcription });
+  } catch (err: any) {
+    console.error('[Transcribe Error]', err);
+    res.status(500).json({ error: err.message || 'Failed to transcribe audio' });
+  }
+});
+
 // Streaming interview chat endpoint
 app.post('/api/interview/chat', async (req, res) => {
   const { messages } = req.body as { messages: ChatMessage[] };
